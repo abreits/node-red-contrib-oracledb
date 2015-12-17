@@ -24,6 +24,7 @@
     "url": "https://github.com/abreits/node-red-contrib-oracledb"
   },
   "dependencies": {
+    "object-resolve-path": "^1.1.0",
     "oracledb": "^1.4.0"
   }
 }
