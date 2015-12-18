@@ -42,6 +42,12 @@ This is a work in progress, currently it is only an Oracle database storage outp
 
 ## What's new     <a name="whatsnew"></a>
 
+### version 0.2.0
+- major refactor, made preparations for better testable code:
+  - javascript source code has been translated to typescript
+  - gulp build system added
+  - if NODE_RED_ROOT environment variable exists, copy build result into its node-red-contrib-oracledb module for quick testing
+
 ### version 0.1.0
 - initial release
 
@@ -50,6 +56,7 @@ This is a work in progress, currently it is only an Oracle database storage outp
 
 The roadmap section describes things that I want to add or change in the (hopefully near) future.
 
+- Improve documentation
 - Make it an input and output node:
   - Add support to return SELECT query results
   - Improve documentation

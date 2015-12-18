@@ -8,9 +8,9 @@
   },
   "keywords": [
     "node-red",
-    "amqp",
-    "rabbitmq",
-    "amqp-ts"
+    "oracle",
+    "sql",
+    "oracledb"
   ],
   "node-red": {
     "nodes": {
@@ -26,5 +26,19 @@
   "dependencies": {
     "object-resolve-path": "^1.1.0",
     "oracledb": "^1.4.0"
+  },
+  "devDependencies": {
+    "del": "^2.2.0",
+    "gulp": "^3.9.0",
+    "gulp-add-src": "^0.2.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sourcemaps": "^1.6.0",
+    "gulp-spawn-mocha": "^2.2.1",
+    "gulp-tslint": "^4.2.1",
+    "gulp-typescript": "^2.10.0",
+    "merge2": "^0.3.6",
+    "source-map-support": "^0.4.0",
+    "tslint": "^3.2.0"
   }
 }
