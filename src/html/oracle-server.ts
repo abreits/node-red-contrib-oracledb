@@ -21,6 +21,10 @@ RED.nodes.registerType("oracle-server", {
     oneditprepare: function () {
         var tabs = RED.tabs.create({
             id: "node-config-oracle-server-tabs",
+            onchange: function (tab) {
+                $("#node-config-oracle-server-tabs-content").children().hide();
+                $("#" + tab.id).show();
+            }
         });
         tabs.addTab({
             id: "oracle-server-tab-connection",
@@ -32,18 +36,18 @@ RED.nodes.registerType("oracle-server", {
         });
         setTimeout(function() { tabs.resize(); }, 0);
 
-        function updateTLSOptions() {
-            if ($("#node-config-input-usetls").is(":checked")) {
-                $("#node-config-input-verifyservercert").prop("disabled", false);
-                $("#node-config-input-verifyservercert").next().css("color", "");
-            } else {
-                $("#node-config-input-verifyservercert").prop("disabled", true);
-                $("#node-config-input-verifyservercert").next().css("color", "#aaa");
-            }
-        }
-        updateTLSOptions();
-        $("#node-config-input-usetls").on("click", function () {
-            updateTLSOptions();
-        });
+        // function updateTLSOptions() {
+        //     if ($("#node-config-input-usetls").is(":checked")) {
+        //         $("#node-config-input-verifyservercert").prop("disabled", false);
+        //         $("#node-config-input-verifyservercert").next().css("color", "");
+        //     } else {
+        //         $("#node-config-input-verifyservercert").prop("disabled", true);
+        //         $("#node-config-input-verifyservercert").next().css("color", "#aaa");
+        //     }
+        // }
+        // updateTLSOptions();
+        // $("#node-config-input-usetls").on("click", function () {
+        //     updateTLSOptions();
+        // });
     }
 });

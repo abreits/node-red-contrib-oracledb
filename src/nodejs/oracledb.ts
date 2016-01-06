@@ -48,6 +48,8 @@ module.exports = function(RED) {
       node.error("Error parsing mappings: " + err.message);
       node.mappings = [];
     }
+    node.resultAction = n.resultaction;
+    node.resultLimit = n.resultlimit;
     node.server = RED.nodes.getNode(n.server);
 
     // set oracle node type initialization parameters
@@ -80,8 +82,10 @@ module.exports = function(RED) {
         } else {
           query = msg.query;
         }
+        var resultAction = msg.resultAction || node.resultAction;
+        var resultSetLimit = msg.resultSetLimit || node.resultLimit;
 
-        node.server.insert(node, query, values);
+        node.server.query(node, query, values, resultAction, resultSetLimit, node.send);
       });
     };
 
@@ -104,7 +108,7 @@ module.exports = function(RED) {
     node.clientCount = 0;
     node.connection = null;
     node.connectString = "";
-    node.insertQueue = [];
+    node.queryQueue = [];
 
     node.user = node.credentials.user || "hr";
     node.password = node.credentials.password || "hr";
@@ -153,7 +157,7 @@ module.exports = function(RED) {
       }
     };
 
-    node.insert = function(requestingNode, query, values) {
+    node.query = function(requestingNode, query, values, resultAction, resultSetLimit, sendResult) {
       if (node.connection) {
         node.connection.execute(
           query,
@@ -169,18 +173,21 @@ module.exports = function(RED) {
           }
         );
       } else {
-        node.insertQueue.push({
+        node.queryQueue.push({
           requestingNode: requestingNode,
-          quert: query,
-          values: values
+          query: query,
+          values: values,
+          resultAction: resultAction,
+          resultSetLimit: resultSetLimit,
+          sendResult: sendResult
         });
       }
     };
 
-    node.insertQueued = function() {
-      while (node.connection && node.insertQueue.length > 0) {
-        var e = node.insertQueue.shift();
-        node.execute(e.requestingNode, e.query, e.values);
+    node.queryQueued = function() {
+      while (node.connection && node.queryQueue.length > 0) {
+        var e = node.queryQueue.shift();
+        node.execute(e.requestingNode, e.query, e.values, e.resultAction, e.resultSetLimit, e.sendResult);
       }
     };
   }

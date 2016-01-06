@@ -22,10 +22,12 @@ RED.nodes.registerType("oracledb", {
                             "\n\t\"location.of.second.array.index.field\"," +
                             "\n\t\"last_array_indexfield.in[3]\"" +
                             "\n]"},
-        server: { type: "oracle-server", required: true }
+        server: { type: "oracle-server", required: true },
+        resultaction: {value: "multi"},
+        resultlimit: {value: 100}
     },
     inputs: 1,
-    outputs: 0,
+    outputs: 1,
     color: "#ff3333",
     icon: "db.png",
     align: "right",
@@ -82,11 +84,15 @@ RED.nodes.registerType("oracledb", {
         });
         tabs.addTab({
             id: "oracle-out-tab-query",
-            label: "Insert query"
+            label: "SQL query"
         });
         tabs.addTab({
             id: "oracle-out-tab-mappings",
             label: "Field mappings"
+        });
+        tabs.addTab({
+            id: "oracle-out-tab-results",
+            label: "Query results"
         });
         setTimeout(function() { tabs.resize(); }, 0);
 

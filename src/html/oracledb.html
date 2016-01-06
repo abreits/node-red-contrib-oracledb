@@ -10,6 +10,7 @@
                   <label for="node-input-server"><i class="fa fa-globe"></i> Server</label>
                   <input type="text" id="node-input-server">
               </div>
+
               <br/>
               <div class="form-row">
                   <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
@@ -19,7 +20,7 @@
         <div id="oracle-out-tab-query" style="display:none">
             <div class="form-row" style="margin-bottom: 0px">
                 <input type="checkbox" id="node-input-usequery" style="display: inline-block; width: auto; vertical-align: top;">
-                <label for="node-input-usequery" style="width: 80%;">always use Oracle SQL insert statement (even if <i>msg.query</i> exists):</label>
+                <label for="node-input-usequery" style="width: 80%;">always execute this Oracle SQL statement (even if <i>msg.query</i> exists):</label>
             </div>
 
             <div class="form-row node-input-query-text-editor-row">
@@ -38,16 +39,34 @@
                 <div style="height: 250px;" class="node-text-editor" id="node-input-mappings-editor" ></div>
             </div>
         </div>
+        <div id="oracle-out-tab-results" style="display:none">
+            <div class="form-row">
+                <label for="node-input-resultaction"><i class="fa fa-hand-o-right"></i> Action</label>
+                <select type="text" id="node-input-resultaction" style="width: 270px;">
+                    <option value="none">ignore query results</option>
+                    <option value="single">send single query result message</option>
+                    <option value="multi">send multiple query result messages</option>
+                </select>
+            </div>
+
+            <div class="form-row">
+                <label for="node-input-resultlimit"><i class="fa fa-bars"></i> Msg rows</label>
+                <input type="text" id="node-input-resultlimit" style="width: 80px;"> (maximum # of result rows per message)
+            </div>
+        </div>
     </div>
 </script>
 
 <script type="text/x-red" data-help-name="oracledb">
-   <p>Oracle database storage node. Connects to a server and inserts the message payload into the specified database with the specified insert query.</p>
-   <p>Expects an object called
-   <b>msg</b> containing <b>msg.payload</b> and optionally <b>msg.query</b> and <b>msg.mappings</b>. If <b>msg.payload</b> does not exist, the whole msg object will be sent</p>
-   <p>
-   <b>msg.payload</b>: array containing the fields to be inserted with the insert query, first element in the array corresponds with the first `:fieldname` parameter in the query etc.<br>
-   <b>msg.query</b>: string containing the insert query message, if this is not available, the default insert query will be used.<br>
-   <b>msg.fieldMappings</b>: array containing the object to array field mappings. Will be used if the content of <i>msg.payload</i> is not an array, if this is not available, the default field mappings will be used.
-   </p>
+  <p>Oracle database storage node. Connects to a server and inserts rows into the database or retrieves rows from the database with a SQL query.</p>
+  <p>Expects an object called
+  <b>msg</b> containing <b>msg.payload</b> and optionally <b>msg.query</b> and <b>msg.mappings</b>. If <b>msg.payload</b> does not exist, the whole msg object will be sent</p>
+  <p>
+  <b>msg.payload</b>: array containing the fields to be used inside the query, first element in the array corresponds with the first `:fieldname` parameter in the query etc.<br>
+  <b>msg.query</b>: string containing the SQL query, if this is not available, the default SQL query will be used.<br>
+  <b>msg.fieldMappings</b>: array containing the object to array field mappings. Will be used if the content of <i>msg.payload</i> is not an array. If this is not available, the default field mappings will be used.<br>
+  <b>msg.resultAction</b>: string containing "single", "multi" or "none", if "single" a single result message containing the resulting rows will be sent, if "multi" the results can be spread over multiple messages, if "none" no messages will be sent.
+  If this is not available the default defined in <i>Query results</i> will be used.<br>
+  <b>msg.resultSetSize</b>: number, maximum number of rows in a result message. If this is not available the default defined in <i>Query results</i> will be used.
+  </p>
 </script>
