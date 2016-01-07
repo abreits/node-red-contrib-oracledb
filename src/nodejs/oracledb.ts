@@ -207,18 +207,22 @@ module.exports = function (RED) {
       }
     };
 
-    node.fetchRowsFromResultSet = function (requestingNode, resultSet, rows) {
-      resultSet.getRows(rows, function (err, rows) {
+    node.fetchRowsFromResultSet = function (requestingNode, resultSet, maxRows) {
+      resultSet.getRows(maxRows, function (err, rows) {
         if (err) {
           requestingNode.error("Oracle resultSet error: " + err.message);
         } else if (rows.length === 0) {
-          resultSet.close();
+          resultSet.close(function() {
+            if (err) {
+              requestingNode.error("Oracle error closing resultSet: " + err.message);
+            }
+          });
         } else {
           requestingNode.send({
             payload: rows
           });
           requestingNode.log("Oracle query resultSet rows sent");
-          node.fetchRowsFromResultSet(requestingNode, resultSet, rows);
+          node.fetchRowsFromResultSet(requestingNode, resultSet, maxRows);
         }
       });
     };
