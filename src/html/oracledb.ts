@@ -28,7 +28,7 @@ RED.nodes.registerType("oracledb", {
     },
     inputs: 1,
     outputs: 1,
-    color: "#ff3333",
+    color: "#ff6666",
     icon: "db.png",
     align: "right",
     label: function () {

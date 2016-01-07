@@ -2,7 +2,7 @@ Node-RED AMQP input and output nodes
 ====================================
 
 
-`node-red-contrib-oracledb` is a [Node-RED](http://nodered.org/docs/creating-nodes/packaging.html) package that connects directly to an Oracle database server. It currently contains an output and a configuration node to connect to Oracle databases for Node-RED storage.
+`node-red-contrib-oracledb` is a [Node-RED](http://nodered.org/docs/creating-nodes/packaging.html) package that connects directly to an Oracle database server. It currently contains a query and a configuration node to connect to Oracle databases for Node-RED storage.
 
 It uses the [oracledb](https://www.npmjs.com/package/oracledb) library for the Oracle database connectivity.
 
@@ -32,7 +32,7 @@ If you have installed the .zip or cloned your own copy of Node-RED from github, 
 
 ## Overview     <a name="overview"></a>
 
-This is a work in progress, currently it is only an Oracle database storage output node for Node RED.
+This is a Node-Red Oracle database input/output node. The function it provides depends on the query that is sent to the oracle database. An INSERT query stores data in the database and a SELECT query can send data to another node.
 
 
 ## Known issues     <a name="knownissues"></a>
@@ -41,6 +41,9 @@ This is a work in progress, currently it is only an Oracle database storage outp
 
 
 ## What's new     <a name="whatsnew"></a>
+
+### version 0.3.0
+- added input node functionality for single results and result sets
 
 ### version 0.2.0
 - major refactor, made preparations for better testable code:
@@ -56,9 +59,11 @@ This is a work in progress, currently it is only an Oracle database storage outp
 
 The roadmap section describes things that I want to add or change in the (hopefully near) future.
 
+### Planned
 - Improve documentation
-- Make it an input and output node:
-  - Add support to return SELECT query results
-  - Improve documentation
 - Make testable
 - Add localization
+
+### Realized
+- Make it an input and output node:
+  - Add support to return SELECT query results
