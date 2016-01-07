@@ -1,4 +1,4 @@
-module.exports = function(RED) {
+module.exports = function (RED) {
   "use strict";
   var oracledb = require("oracledb");
   var resolvePath = require("object-resolve-path");
@@ -8,21 +8,21 @@ module.exports = function(RED) {
     if (node.server) {
       node.status({fill: "green", shape: "ring", text: "connecting"});
       node.serverStatus = node.server.claimConnection();
-      node.serverStatus.on("connected", function() {
+      node.serverStatus.on("connected", function () {
           node.status({fill: "green", shape: "dot", text: "connected"});
           node.initialize();
       });
-      node.serverStatus.on("closed", function() {
+      node.serverStatus.on("closed", function () {
           node.status({fill: "red", shape: "ring", text: "disconnected"});
       });
-      node.serverStatus.on("error", function() {
+      node.serverStatus.on("error", function () {
           node.status({fill: "red", shape: "dot", text: "connect error"});
       });
-      node.serverStatus.on("reconnection", function() {
+      node.serverStatus.on("reconnection", function () {
           node.status({fill: "red", shape: "ring", text: "reconnecting"});
       });
 
-      node.on("close", function() {
+      node.on("close", function () {
         node.server.freeConnection();
       });
     } else {
@@ -83,9 +83,9 @@ module.exports = function(RED) {
           query = msg.query;
         }
         var resultAction = msg.resultAction || node.resultAction;
-        var resultSetLimit = msg.resultSetLimit || node.resultLimit;
+        var resultSetLimit = parseInt(msg.resultSetLimit || node.resultLimit, 10);
 
-        node.server.query(node, query, values, resultAction, resultSetLimit, node.send);
+        node.server.query(node, query, values, resultAction, resultSetLimit);
       });
     };
 
@@ -116,7 +116,7 @@ module.exports = function(RED) {
     node.status = new events.EventEmitter();
     node.status.setMaxListeners(0);
 
-    node.claimConnection = function() {
+    node.claimConnection = function () {
       if (node.clientCount === 0) {
         // Create the connection for the Oracle server
         node.connectString = node.host + ":" + node.port + (node.db ? "/" + node.db : "");
@@ -141,7 +141,7 @@ module.exports = function(RED) {
       return node.status;
     };
 
-    node.freeConnection = function() {
+    node.freeConnection = function () {
       node.clientCount--;
 
       if (node.clientCount === 0 && node.connection !== null) {
@@ -157,18 +157,42 @@ module.exports = function(RED) {
       }
     };
 
-    node.query = function(requestingNode, query, values, resultAction, resultSetLimit, sendResult) {
+    node.query = function (requestingNode, query, values, resultAction, resultSetLimit) {
+      requestingNode.log("Oracle query start execution");
       if (node.connection) {
+        requestingNode.log("Oracle query execution started");
+        var options = {
+          autoCommit: true,
+          outFormat: oracledb.OBJECT,
+          maxRows: resultSetLimit,
+          resultSet: resultAction === "multi"
+        };
         node.connection.execute(
           query,
           values,
-          {autoCommit: true},
+          options,
           function (err, result) {
             if (err) {
               // todo: detect different types of errors and act accordingly:
               //  - if insert error, log the error and ignore (implemented as default)
               //  - if connection lost/broken etc. requeue insert and start reconnection process (todo)
-              requestingNode.error("Oracle out error: " + err.message);
+              requestingNode.error("Oracle query error: " + err.message);
+            } else {
+              switch (resultAction) {
+                case "single":
+                  requestingNode.send({
+                    payload: result.rows
+                  });
+                  requestingNode.log("Oracle query single result rows sent");
+                  break;
+                case "multi":
+                  node.fetchRowsFromResultSet(requestingNode, result.resultSet, resultSetLimit);
+                  requestingNode.log("Oracle query multi result rows sent");
+                  break;
+                default:
+                  requestingNode.log("Oracle query no result rows sent");
+                  break;
+              }
             }
           }
         );
@@ -178,13 +202,28 @@ module.exports = function(RED) {
           query: query,
           values: values,
           resultAction: resultAction,
-          resultSetLimit: resultSetLimit,
-          sendResult: sendResult
+          resultSetLimit: resultSetLimit
         });
       }
     };
 
-    node.queryQueued = function() {
+    node.fetchRowsFromResultSet = function (requestingNode, resultSet, rows) {
+      resultSet.getRows(rows, function (err, rows) {
+        if (err) {
+          requestingNode.error("Oracle resultSet error: " + err.message);
+        } else if (rows.length === 0) {
+          resultSet.close();
+        } else {
+          requestingNode.send({
+            payload: rows
+          });
+          requestingNode.log("Oracle query resultSet rows sent");
+          node.fetchRowsFromResultSet(requestingNode, resultSet, rows);
+        }
+      });
+    };
+
+    node.queryQueued = function () {
       while (node.connection && node.queryQueue.length > 0) {
         var e = node.queryQueue.shift();
         node.execute(e.requestingNode, e.query, e.values, e.resultAction, e.resultSetLimit, e.sendResult);
