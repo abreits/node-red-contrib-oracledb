@@ -42,6 +42,9 @@ This is a Node-Red Oracle database input/output node. The function it provides d
 
 ## What's new     <a name="whatsnew"></a>
 
+### version 0.4.0
+- added automatic reconnect to oracle server
+
 ### version 0.3.0
 - added input node functionality for single results and result sets
 
