@@ -9,6 +9,8 @@ RED.nodes.registerType("oracle-server", {
     defaults: {
         host: { value: "localhost" },
         port: { value: 1521, validate: RED.validators.number() },
+        reconnect: {value: true},
+        reconnecttimeout: { value: 5000, validate: RED.validators.number() },
         db: { value: "XE"},
     },
     credentials: {
