@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "object-resolve-path": "^1.1.0",
-    "oracledb": "^1.4.0"
+    "oracledb": "^1.6.0"
   },
   "devDependencies": {
     "del": "^2.2.0",
