@@ -101,7 +101,7 @@
 <script type="text/x-red" data-help-name="oracledb">
   <p>Oracle database storage node. Connects to a server and inserts rows into the database or retrieves rows from the database with a SQL query.</p>
   <p>Expects an object called
-  <b>msg</b> containing <b>msg.payload</b> and optionally <b>msg.query</b> and <b>msg.mappings</b>. If <b>msg.payload</b> does not exist, the whole msg object will be sent</p>
+  <b>msg</b> containing <b>msg.payload</b> and optionally <b>msg.query</b> and <b>msg.mappings</b>.</p>
   <p>
   <b>msg.payload</b>: array containing the fields to be used inside the query, first element in the array corresponds with the first `:fieldname` parameter in the query etc.<br>
   <b>msg.query</b>: string containing the SQL query, if this is not available, the default SQL query will be used.<br>
@@ -123,7 +123,7 @@ RED.nodes.registerType("oracle-server", {
         port: { value: 1521, validate: RED.validators.number() },
         reconnect: { value: true },
         reconnecttimeout: { value: 5000, validate: RED.validators.number() },
-        db: { value: "XE" },
+        db: { value: "orcl" },
     },
     credentials: {
         user: { type: "text" },

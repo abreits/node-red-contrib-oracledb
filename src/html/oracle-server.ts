@@ -11,7 +11,7 @@ RED.nodes.registerType("oracle-server", {
         port: { value: 1521, validate: RED.validators.number() },
         reconnect: {value: true},
         reconnecttimeout: { value: 5000, validate: RED.validators.number() },
-        db: { value: "XE"},
+        db: { value: "orcl"},
     },
     credentials: {
         user: {type: "text"},

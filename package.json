@@ -28,6 +28,7 @@
     "oracledb": "^1.6.0"
   },
   "devDependencies": {
+    "chai": "^3.5.0",
     "del": "^2.2.0",
     "gulp": "^3.9.0",
     "gulp-add-src": "^0.2.0",

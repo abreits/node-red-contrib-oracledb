@@ -3,6 +3,7 @@ module.exports = function (RED) {
   var oracledb = require("oracledb");
   var resolvePath = require("object-resolve-path");
   var events = require("events");
+  var util = require("util");
 
   function initialize(node) {
     if (node.server) {
@@ -65,20 +66,18 @@ module.exports = function (RED) {
     node.on("input", function (msg) {
       var values = [];
       var value;
-      var payload = msg.payload || msg;
-
-      if (node.useMappings || (msg.payload && msg.payload.constructor !== Array)) {
+      if (node.useMappings || (msg.payload && !util.isArray(msg.payload))) {
         // use mappings file to map values to array
         for (var i = 0, len = node.mappings.length; i < len; i++) {
           try {
-            value = resolvePath(payload, node.mappings[i]);
+            value = resolvePath(msg.payload, node.mappings[i]);
           } catch (err) {
             value = null;
           }
           values.push(value);
         }
       } else {
-        values = node.payload;
+        values = msg.payload;
       }
       var query;
       if (node.useQuery || !msg.query) {
@@ -88,7 +87,6 @@ module.exports = function (RED) {
       }
       var resultAction = msg.resultAction || node.resultAction;
       var resultSetLimit = parseInt(msg.resultSetLimit || node.resultLimit, 10);
-
       node.server.query(node, query, values, resultAction, resultSetLimit);
     });
     //};
@@ -105,8 +103,8 @@ module.exports = function (RED) {
     RED.nodes.createNode(node, n);
     // Store local copies of the node configuration (as defined in the .html)
     node.host = n.host || "localhost";
-    node.port = n.port || "5672";
-    node.db = n.db;
+    node.port = n.port || "1521";
+    node.db = n.db || "orcl";
 
     node.reconnect = n.reconnect;
     node.reconnectTimeout = n.reconnecttimeout || 5000;
@@ -148,13 +146,14 @@ module.exports = function (RED) {
             // start reconnection process (retry connection claim)
             if (node.reconnect) {
               node.log("Retry connection to Oracle server in " + node.reconnectTimeout + " ms");
-              setTimeout(node.claimConnection, node.reconnectTimeout);
+              node.reconnecting = setTimeout(node.claimConnection, node.reconnectTimeout);
             }
           } else {
             node.connection = connection;
             node.status.emit("connected");
             node.log("Connected to Oracle server " + node.connectString);
             node.queryQueued();
+            delete node.reconnecting;
           }
         });
       }
@@ -162,6 +161,10 @@ module.exports = function (RED) {
     };
 
     node.freeConnection = function () {
+      if (node.reconnecting) {
+        clearTimeout(node.reconnecting);
+        delete node.reconnecting;
+      }
       if (node.connection) {
         node.connection.release(function (err) {
           if (err) {
@@ -176,8 +179,15 @@ module.exports = function (RED) {
     };
 
     node.query = function (requestingNode, query, values, resultAction, resultSetLimit) {
+      // console.log("requestingNode: " + requestingNode);
+      // console.log("query: " + query);
+      // console.log("values: " + values);
+      // console.log("resultAction: " + resultAction);
+      // console.log("resultSetLimit: " + resultSetLimit);
+
       requestingNode.log("Oracle query start execution");
       if (node.connection) {
+        delete node.reconnecting;
         requestingNode.log("Oracle query execution started");
         var options = {
           autoCommit: true,
@@ -199,7 +209,7 @@ module.exports = function (RED) {
                 node.connection = null;
                 if (node.reconnect) {
                   node.log("Oracle server connection lost, retry in " + node.reconnectTimeout + " ms");
-                  setTimeout(node.query, node.reconnectTimeout,
+                  node.reconnecting = setTimeout(node.query, node.reconnectTimeout,
                                 requestingNode, query, values, resultAction, resultSetLimit);
                 }
               }
