@@ -1,4 +1,4 @@
-Node-RED AMQP input and output nodes
+Node-RED Oracle Database nodes
 ====================================
 
 
