@@ -106,11 +106,6 @@
   <p>
   <b>msg.payload</b>: array containing the fields to be used inside the query, first element in the array corresponds with the first `:fieldname` parameter in the query etc.<br>
   <b>msg.query</b>: string containing the SQL query, if this is not available, the default SQL query will be used.<br>
-  <b>msg.user</b>: string containing user configuration of the DB connection, if this is not available, the default will be used.<br>
-  <b>msg.psw</b>: string containing password configuration of the DB connection, if this is not available, the default will be used.<br>
-  <b>msg.host</b>: string containing url configuration of the DB connection, if this is not available, the default will be used.<br>
-  <b>msg.port</b>: string containing port configuration of the DB connection, if this is not available, the default will be used.<br>
-  <b>msg.db</b>: string containing db configuration of the DB connection, if this is not available, the default will be used.<br>
   <b>msg.fieldMappings</b>: array containing the object to array field mappings. Will be used if the content of <i>msg.payload</i> is not an array. If this is not available, the default field mappings will be used.<br>
   <b>msg.resultAction</b>: string containing "single", "single-meta", "multi" or "none", if "single" a single result message containing the resulting rows will be sent, if "single-meta" a single result message containing the resulting rows and metadata will be sent, if "multi" the results can be spread over multiple messages, if "none" no messages will be sent.
   If this is not available the default defined in <i>Query results</i> will be used.<br>
