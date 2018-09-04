@@ -86,6 +86,7 @@
                 <select type="text" id="node-input-resultaction" style="width: 270px;">
                     <option value="none">ignore query results</option>
                     <option value="single">send single query result message</option>
+                    <option value="single-meta">send single query result message with metadata</option>
                     <option value="multi">send multiple query result messages</option>
                 </select>
             </div>
@@ -105,196 +106,201 @@
   <p>
   <b>msg.payload</b>: array containing the fields to be used inside the query, first element in the array corresponds with the first `:fieldname` parameter in the query etc.<br>
   <b>msg.query</b>: string containing the SQL query, if this is not available, the default SQL query will be used.<br>
+  <b>msg.user</b>: string containing user configuration of the DB connection, if this is not available, the default will be used.<br>
+  <b>msg.psw</b>: string containing password configuration of the DB connection, if this is not available, the default will be used.<br>
+  <b>msg.host</b>: string containing url configuration of the DB connection, if this is not available, the default will be used.<br>
+  <b>msg.port</b>: string containing port configuration of the DB connection, if this is not available, the default will be used.<br>
+  <b>msg.db</b>: string containing db configuration of the DB connection, if this is not available, the default will be used.<br>
   <b>msg.fieldMappings</b>: array containing the object to array field mappings. Will be used if the content of <i>msg.payload</i> is not an array. If this is not available, the default field mappings will be used.<br>
-  <b>msg.resultAction</b>: string containing "single", "multi" or "none", if "single" a single result message containing the resulting rows will be sent, if "multi" the results can be spread over multiple messages, if "none" no messages will be sent.
+  <b>msg.resultAction</b>: string containing "single", "single-meta", "multi" or "none", if "single" a single result message containing the resulting rows will be sent, if "single-meta" a single result message containing the resulting rows and metadata will be sent, if "multi" the results can be spread over multiple messages, if "none" no messages will be sent.
   If this is not available the default defined in <i>Query results</i> will be used.<br>
   <b>msg.resultSetSize</b>: number, maximum number of rows in a result message. If this is not available the default defined in <i>Query results</i> will be used.
   </p>
 </script>
 
 <script type="text/javascript">
-//
-// -- oracle server --------------------------------------------------------------------------------
-//
-RED.nodes.registerType("oracle-server", {
-    category: "config",
-    defaults: {
-        host: { value: "localhost" },
-        port: { value: 1521, validate: RED.validators.number() },
-        reconnect: { value: true },
-        reconnecttimeout: { value: 5000, validate: RED.validators.number() },
-        db: { value: "orcl" },
-    },
-    credentials: {
-        user: { type: "text" },
-        password: { type: "password" }
-    },
-    label: function () {
-        return (this.host || "localhost") + (this.port ? ":" + this.port : "") + (this.db ? "/" + this.db : "");
-    },
-    oneditprepare: function () {
-        var tabs = RED.tabs.create({
-            id: "node-config-oracle-server-tabs",
-            onchange: function (tab) {
-                $("#node-config-oracle-server-tabs-content").children().hide();
-                $("#" + tab.id).show();
-            }
-        });
-        tabs.addTab({
-            id: "oracle-server-tab-connection",
-            label: "Connection"
-        });
-        tabs.addTab({
-            id: "oracle-server-tab-security",
-            label: "Security"
-        });
-        setTimeout(function () { tabs.resize(); }, 0);
-        // function updateTLSOptions() {
-        //     if ($("#node-config-input-usetls").is(":checked")) {
-        //         $("#node-config-input-verifyservercert").prop("disabled", false);
-        //         $("#node-config-input-verifyservercert").next().css("color", "");
-        //     } else {
-        //         $("#node-config-input-verifyservercert").prop("disabled", true);
-        //         $("#node-config-input-verifyservercert").next().css("color", "#aaa");
-        //     }
-        // }
-        // updateTLSOptions();
-        // $("#node-config-input-usetls").on("click", function () {
-        //     updateTLSOptions();
-        // });
-    }
-});
-
-//
-// -- oracledb -------------------------------------------------------------------------------------
-//
-RED.nodes.registerType("oracledb", {
-    category: "storage",
-    defaults: {
-        name: { value: "" },
-        usequery: { value: false },
-        query: { value: "INSERT INTO oracleTableName" +
-                "\n\t(fieldName1, fieldName2, Fieldname3)" +
-                "\n\tVALUES (" +
-                "\n\t\t:valueOfValuesArrayIndex0," +
-                "\n\t\t:valueOfValuesArrayIndex1," +
-                "\n\t\t:valueOfValuesArrayIndex2," +
-                "\n\t\)" },
-        usemappings: { value: false },
-        mappings: { value: "[" +
-                "\n\t\"location.of.first.array.index.field.in.msg.payload\"," +
-                "\n\t\"location.of.second.array.index.field\"," +
-                "\n\t\"last_array_indexfield.in[3]\"" +
-                "\n]" },
-        server: { type: "oracle-server", required: true },
-        resultaction: { value: "multi" },
-        resultlimit: { value: 100 }
-    },
-    inputs: 1,
-    outputs: 1,
-    color: "#ff6666",
-    icon: "db.png",
-    align: "right",
-    label: function () {
-        return this.name || "oracledb";
-    },
-    labelStyle: function () {
-        return this.name ? "node_label_italic" : "";
-    },
-    oneditprepare: function () {
-        // use query editor
-        var queryField = $("#node-input-query");
-        var queryEditor = RED.editor.createEditor({
-            id: "node-input-query-editor",
-            mode: "ace/mode/sql",
-            value: queryField.val()
-        });
-        queryEditor.getSession().on("change", function () {
-            queryField.val(queryEditor.getSession().getValue());
-        });
-        // use mappings editor
-        var mappingsField = $("#node-input-mappings");
-        var mappingsEditor = RED.editor.createEditor({
-            id: "node-input-mappings-editor",
-            mode: "ace/mode/json",
-            value: mappingsField.val()
-        });
-        mappingsEditor.getSession().on("change", function () {
-            mappingsField.val(mappingsEditor.getSession().getValue());
-        });
-        var visibleTab = "query";
-        var tabs = RED.tabs.create({
-            id: "node-input-oracle-out-tabs",
-            onchange: function (tab) {
-                $("#node-input-oracle-out-tabs-content").children().hide();
-                $("#" + tab.id).show();
-                if (tab.id === "oracle-out-tab-query") {
-                    visibleTab = "query";
-                    functionDialogResize();
-                    queryEditor.focus();
+    //
+    // -- oracle server --------------------------------------------------------------------------------
+    //
+    RED.nodes.registerType("oracle-server", {
+        category: "config",
+        defaults: {
+            host: { value: "localhost" },
+            port: { value: 1521, validate: RED.validators.number() },
+            reconnect: { value: true },
+            reconnecttimeout: { value: 5000, validate: RED.validators.number() },
+            db: { value: "orcl" },
+        },
+        credentials: {
+            user: { type: "text" },
+            password: { type: "password" }
+        },
+        label: function () {
+            return (this.host || "localhost") + (this.port ? ":" + this.port : "") + (this.db ? "/" + this.db : "");
+        },
+        oneditprepare: function () {
+            var tabs = RED.tabs.create({
+                id: "node-config-oracle-server-tabs",
+                onchange: function (tab) {
+                    $("#node-config-oracle-server-tabs-content").children().hide();
+                    $("#" + tab.id).show();
                 }
-                if (tab.id === "oracle-out-tab-mappings") {
-                    visibleTab = "mappings";
-                    functionDialogResize();
-                    mappingsEditor.focus();
-                }
-            }
-        });
-        tabs.addTab({
-            id: "oracle-out-tab-connection",
-            label: "Server connection"
-        });
-        tabs.addTab({
-            id: "oracle-out-tab-query",
-            label: "SQL query"
-        });
-        tabs.addTab({
-            id: "oracle-out-tab-mappings",
-            label: "Field mappings"
-        });
-        tabs.addTab({
-            id: "oracle-out-tab-results",
-            label: "Query results"
-        });
-        setTimeout(function () { tabs.resize(); }, 0);
-        // resize editor areas to fit the edit window
-        function functionDialogResize() {
-            var height = $("#dialog-form").height();
-            height -= $("#node-input-oracle-out-tabs").outerHeight(true);
-            var rows = $("#oracle-out-tab-" + visibleTab + ">div:not(.node-input-" + visibleTab + "-text-editor-row)");
-            for (var i = 0; i < rows.length; i++) {
-                height -= $(rows[i]).outerHeight(true);
-            }
-            var editorRow = $("#dialog-form>div.node-input-" + visibleTab + "-text-editor-row");
-            if (editorRow.css("marginTop")) {
-                height -= parseInt(editorRow.css("marginTop"), 10);
-            }
-            if (editorRow.css("marginBottom")) {
-                height -= parseInt(editorRow.css("marginBottom"), 10);
-            }
-            height -= 5;
-            $("#node-input-" + visibleTab + "-editor").css("height", height + "px");
-            if (visibleTab === "query") {
-                queryEditor.resize();
-            }
-            else {
-                mappingsEditor.resize();
-            }
+            });
+            tabs.addTab({
+                id: "oracle-server-tab-connection",
+                label: "Connection"
+            });
+            tabs.addTab({
+                id: "oracle-server-tab-security",
+                label: "Security"
+            });
+            setTimeout(function () { tabs.resize(); }, 0);
+            // function updateTLSOptions() {
+            //     if ($("#node-config-input-usetls").is(":checked")) {
+            //         $("#node-config-input-verifyservercert").prop("disabled", false);
+            //         $("#node-config-input-verifyservercert").next().css("color", "");
+            //     } else {
+            //         $("#node-config-input-verifyservercert").prop("disabled", true);
+            //         $("#node-config-input-verifyservercert").next().css("color", "#aaa");
+            //     }
+            // }
+            // updateTLSOptions();
+            // $("#node-config-input-usetls").on("click", function () {
+            //     updateTLSOptions();
+            // });
         }
-        $("#dialog").on("dialogresize", functionDialogResize);
-        $("#dialog").one("dialogopen", function (ev) {
-            var size = $("#dialog").dialog("option", "sizeCache-function");
-            if (size) {
-                $("#dialog").dialog("option", "width", size.width);
-                $("#dialog").dialog("option", "height", size.height);
-                functionDialogResize();
+    });
+
+    //
+    // -- oracledb -------------------------------------------------------------------------------------
+    //
+    RED.nodes.registerType("oracledb", {
+        category: "storage",
+        defaults: {
+            name: { value: "" },
+            usequery: { value: false },
+            query: { value: "INSERT INTO oracleTableName" +
+                    "\n\t(fieldName1, fieldName2, Fieldname3)" +
+                    "\n\tVALUES (" +
+                    "\n\t\t:valueOfValuesArrayIndex0," +
+                    "\n\t\t:valueOfValuesArrayIndex1," +
+                    "\n\t\t:valueOfValuesArrayIndex2," +
+                    "\n\t\)" },
+            usemappings: { value: false },
+            mappings: { value: "[" +
+                    "\n\t\"location.of.first.array.index.field.in.msg.payload\"," +
+                    "\n\t\"location.of.second.array.index.field\"," +
+                    "\n\t\"last_array_indexfield.in[3]\"" +
+                    "\n]" },
+            server: { type: "oracle-server", required: true },
+            resultaction: { value: "multi" },
+            resultlimit: { value: 100 }
+        },
+        inputs: 1,
+        outputs: 1,
+        color: "#ff6666",
+        icon: "db.png",
+        align: "right",
+        label: function () {
+            return this.name || "oracledb";
+        },
+        labelStyle: function () {
+            return this.name ? "node_label_italic" : "";
+        },
+        oneditprepare: function () {
+            // use query editor
+            var queryField = $("#node-input-query");
+            var queryEditor = RED.editor.createEditor({
+                id: "node-input-query-editor",
+                mode: "ace/mode/sql",
+                value: queryField.val()
+            });
+            queryEditor.getSession().on("change", function () {
+                queryField.val(queryEditor.getSession().getValue());
+            });
+            // use mappings editor
+            var mappingsField = $("#node-input-mappings");
+            var mappingsEditor = RED.editor.createEditor({
+                id: "node-input-mappings-editor",
+                mode: "ace/mode/json",
+                value: mappingsField.val()
+            });
+            mappingsEditor.getSession().on("change", function () {
+                mappingsField.val(mappingsEditor.getSession().getValue());
+            });
+            var visibleTab = "query";
+            var tabs = RED.tabs.create({
+                id: "node-input-oracle-out-tabs",
+                onchange: function (tab) {
+                    $("#node-input-oracle-out-tabs-content").children().hide();
+                    $("#" + tab.id).show();
+                    if (tab.id === "oracle-out-tab-query") {
+                        visibleTab = "query";
+                        functionDialogResize();
+                        queryEditor.focus();
+                    }
+                    if (tab.id === "oracle-out-tab-mappings") {
+                        visibleTab = "mappings";
+                        functionDialogResize();
+                        mappingsEditor.focus();
+                    }
+                }
+            });
+            tabs.addTab({
+                id: "oracle-out-tab-connection",
+                label: "Server connection"
+            });
+            tabs.addTab({
+                id: "oracle-out-tab-query",
+                label: "SQL query"
+            });
+            tabs.addTab({
+                id: "oracle-out-tab-mappings",
+                label: "Field mappings"
+            });
+            tabs.addTab({
+                id: "oracle-out-tab-results",
+                label: "Query results"
+            });
+            setTimeout(function () { tabs.resize(); }, 0);
+            // resize editor areas to fit the edit window
+            function functionDialogResize() {
+                var height = $("#dialog-form").height();
+                height -= $("#node-input-oracle-out-tabs").outerHeight(true);
+                var rows = $("#oracle-out-tab-" + visibleTab + ">div:not(.node-input-" + visibleTab + "-text-editor-row)");
+                for (var i = 0; i < rows.length; i++) {
+                    height -= $(rows[i]).outerHeight(true);
+                }
+                var editorRow = $("#dialog-form>div.node-input-" + visibleTab + "-text-editor-row");
+                if (editorRow.css("marginTop")) {
+                    height -= parseInt(editorRow.css("marginTop"), 10);
+                }
+                if (editorRow.css("marginBottom")) {
+                    height -= parseInt(editorRow.css("marginBottom"), 10);
+                }
+                height -= 5;
+                $("#node-input-" + visibleTab + "-editor").css("height", height + "px");
+                if (visibleTab === "query") {
+                    queryEditor.resize();
+                }
+                else {
+                    mappingsEditor.resize();
+                }
             }
-        });
-        $("#dialog").one("dialogclose", function (ev, ui) {
-            var height = $("#dialog").dialog("option", "height");
-            $("#dialog").off("dialogresize", functionDialogResize);
-        });
-    }
-});
+            $("#dialog").on("dialogresize", functionDialogResize);
+            $("#dialog").one("dialogopen", function (ev) {
+                var size = $("#dialog").dialog("option", "sizeCache-function");
+                if (size) {
+                    $("#dialog").dialog("option", "width", size.width);
+                    $("#dialog").dialog("option", "height", size.height);
+                    functionDialogResize();
+                }
+            });
+            $("#dialog").one("dialogclose", function (ev, ui) {
+                var height = $("#dialog").dialog("option", "height");
+                $("#dialog").off("dialogresize", functionDialogResize);
+            });
+        }
+    });
 
 </script>
