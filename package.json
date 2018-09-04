@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "object-resolve-path": "^1.1.0",
-    "oracledb": "^1.9.3"
+    "oracledb": "^2.3.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
