@@ -97,6 +97,7 @@ module.exports = function(RED) {
     RED.nodes.createNode(node,n);
 
     // Store local copies of the node configuration (as defined in the .html)
+    node.connect_string = n.connect_string || 'tns_name';
     node.host = n.host || 'localhost';
     node.port = n.port || '5672';
     node.db = n.db;

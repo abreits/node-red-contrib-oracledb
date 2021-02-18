@@ -4,6 +4,8 @@ module.exports = function (RED) {
   var resolvePath = require("object-resolve-path");
   var events = require("events");
   var util = require("util");
+  oracledb.fetchAsBuffer = [oracledb.BLOB];
+  oracledb.fetchAsString = [oracledb.CLOB];
 
   function initialize(node) {
     if (node.server) {
@@ -102,9 +104,12 @@ module.exports = function (RED) {
     var node = this;
     RED.nodes.createNode(node, n);
     // Store local copies of the node configuration (as defined in the .html)
+    node.tnsname = n.tnsname || "";
+    node.connectiontype = n.connectiontype || "Classic";
+    node.instantclientpath = n.instantclientpath || "";
     node.host = n.host || "localhost";
     node.port = n.port || "1521";
-    node.db = n.db || "orcl";
+    node.db = n.db || "";
 
     node.reconnect = n.reconnect;
     node.reconnectTimeout = n.reconnecttimeout || 5000;
@@ -115,8 +120,8 @@ module.exports = function (RED) {
     node.connectString = "";
     node.queryQueue = [];
 
-    node.user = node.credentials.user || "hr";
-    node.password = node.credentials.password || "hr";
+    node.user = node.credentials.user;
+    node.password = node.credentials.password;
 
     node.status = new events.EventEmitter();
     node.status.setMaxListeners(0);
@@ -130,10 +135,23 @@ module.exports = function (RED) {
         } else {
           node.status.emit("reconnecting");
         }
+         // Create the connection for the Oracle server
+        if ( !node.instantclientpath ) {
+          node.status.emit("error", "You must set the Instant Client Path!");
+          node.error("You must set the Instant Client Path!");
+        } else {
+          try {
+              oracledb.initOracleClient({libDir: node.instantclientpath});
+          } catch (err) {
+            // do nothing
+          }
+        }
+        if ( node.tnsname ) {
+          node.connectString = node.tnsname;
+        } else {
+          node.connectString = node.host + ":" + node.port + (node.db ? "/" + node.db : "");
+        }
         node.firstConnection = false;
-        // Create the connection for the Oracle server
-        node.connectString = node.host + ":" + node.port + (node.db ? "/" + node.db : "");
-
         oracledb.getConnection({
           user: node.user,
           password: node.password,

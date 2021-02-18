@@ -34,6 +34,9 @@ If you have installed the .zip or cloned your own copy of Node-RED from github, 
 
 This is a Node-Red Oracle database input/output node. The function it provides depends on the query that is sent to the oracle database. An INSERT query stores data in the database and a SELECT query can send data to another node.
 
+To get started, you must install an Oracle Instant Client on the server. Follow the (directions)[https://github.com/oracle/node-oracledb/blob/master/INSTALL.md#instructions] for your OS and note the path in which you installed the Instant Client. 
+
+If you are going to use a TNS Name (with a "Wallet" connection - such as with Autonomous DB), install your wallet contents in the `/network/admin` subdirectory of your Instant Client. 
 
 ## Known issues     <a name="knownissues"></a>
 
@@ -41,6 +44,12 @@ This is a Node-Red Oracle database input/output node. The function it provides d
 
 
 ## What's new     <a name="whatsnew"></a>
+
+### version 0.5.3
+- update to latest node-oracledb
+- add support for connections using TNS Names
+- add entry for path to instant client on server
+- clean up
 
 ### version 0.4.1
 - bugfixes

@@ -15,6 +15,7 @@ var OracledPort = process.env.ORACLEDBTEST_PORT || 1521;
 var OracleDb = process.env.ORACLEDBTEST_DB || "orcl";
 var OracleUser = process.env.ORACLEDBTEST_USER || "hr";
 var OraclePassword = process.env.ORACLEDBTEST_PASSWORD || "hr";
+var InstantClientPath = process.env.ORACLEDBTEST_INSTANT_CLIENT_PATH;
 
 var testNodes = {};
 // var logListener = new EventEmitter();
@@ -33,7 +34,6 @@ var nodeListener = new EventEmitter();
 var REDmock = {
   nodes: {
     createNode: function (node, config) {
-      console.log(node);
       node.credentials = {
         user: OracleUser,
         password: OraclePassword
@@ -63,7 +63,8 @@ var serverConfig = {
   port: OracledPort,
   reconnect: false,
   reconnecttimeout: 5000,
-  db: OracleDb
+  db: OracleDb,
+  instantclientpath: InstantClientPath
 };
 // initialize test nodes
 oracleNodes(REDmock);
@@ -71,7 +72,6 @@ oracleNodes(REDmock);
 describe("Test OracleServer Node function", function() {
 
   var serverNode = new testNodes["oracle-server"](serverConfig);
-
 
   it("should create an Oracle database connection", function (done) {
     serverNode.claimConnection();
