@@ -104,6 +104,7 @@ module.exports = function (RED) {
     var node = this;
     RED.nodes.createNode(node, n);
     // Store local copies of the node configuration (as defined in the .html)
+    node.connectionname = n.connectionname || "";
     node.tnsname = n.tnsname || "";
     node.connectiontype = n.connectiontype || "Classic";
     node.instantclientpath = n.instantclientpath || "";
@@ -131,9 +132,9 @@ module.exports = function (RED) {
       if (!node.Connection && !node.connectionInProgress) {
         node.connectionInProgress = true;
         if (node.firstConnection) {
-          node.status.emit("connecting");
+          node.status.emit(`Connecting with ${node.connectionname}`);
         } else {
-          node.status.emit("reconnecting");
+          node.status.emit(`Reconnecting with ${node.connectionname}`);
         }
          // Create the connection for the Oracle server
         if ( !node.instantclientpath ) {
@@ -160,7 +161,7 @@ module.exports = function (RED) {
           node.connectionInProgress = false;
           if (err) {
             node.status.emit("error", err);
-            node.error("Oracle-server error connection to " + node.connectString + ": " + err.message);
+            node.error("Oracle-server error connection to " + node.connectString + " with connection " + node.connectionname + ": " + err.message);
             // start reconnection process (retry connection claim)
             if (node.reconnect) {
               node.log("Retry connection to Oracle server in " + node.reconnectTimeout + " ms");

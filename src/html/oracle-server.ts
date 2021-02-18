@@ -7,6 +7,7 @@ declare var RED: any;
 RED.nodes.registerType("oracle-server", {
     category: "config",
     defaults: {
+        connectionname: { value: "", required: true },
         tnsname: { value: "" },
         connectiontype: { value: "Classic" },
         instantclientpath: { value: "" },
@@ -23,10 +24,7 @@ RED.nodes.registerType("oracle-server", {
         password: {type: "password"}
     },
     label: function() {
-        if ( this.tnsname ) {
-            return this.tnsname;
-        }
-        return (this.host || "localhost") + (this.port ? ":" + this.port : "") + (this.db ? "/" + this.db : "");
+        return this.connectionname;
     },
     oneditprepare: function () {
         var tabs = RED.tabs.create({

@@ -45,6 +45,9 @@ If you are going to use a TNS Name (with a "Wallet" connection - such as with Au
 
 ## What's new     <a name="whatsnew"></a>
 
+### version 0.5.4
+- add connection name to allow multiple connections to server using different credentials/schemas
+
 ### version 0.5.3
 - update to latest node-oracledb
 - add support for connections using TNS Names

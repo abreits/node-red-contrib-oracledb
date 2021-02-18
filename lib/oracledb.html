@@ -8,6 +8,10 @@
     <div id="node-config-oracle-server-tabs-content" style="min-height: 170px;">
         <div id="oracle-server-tab-connection" style="display:none">
             <div class="form-row">
+                <label for="node-config-input-connectionname" style="width: 150px;"><i class="fa fa-cloud"></i> Connection Name</label>
+                <input class="input-append-left" type="text" required="required" id="node-config-input-connectionname" placeholder="Name">
+            </div>
+            <div class="form-row">
                 <label for="node-config-input-connectiontype" style="width: 150px;"><i class="fa fa-question"></i> Connection Type</label>
                 <select class="input-append-left" id="node-config-input-connectiontype">
                     <option value="Classic">Classic</option>
@@ -59,10 +63,12 @@
 </script>
 <script type="text/x-red" data-help-name="oracle-server">
     <h3>Connection</h3>
+    <h4>Connection Name:</h4>
+    <p>A name for this connection.</p>
     <h4>Connection Type:</h4>
     <ul>
         <li><b>Classic:</b> A connection using <span class="property-type">host</span>, <span class="property-type">port</span>, and <span class="property-type">db</span>.</li>
-        <li><b>TNS Name:</b> A connection using a TNS Name which requires.</li>
+        <li><b>TNS Name:</b> A connection using a TNS Name which requires a wallet to be installed on the server.</li>
     </ul>
     <h5>Instant Client Path</h5>
     <p>The path on your server to the directory in which you installed the Oracle Instant Client. Ex: <code>/path/to/instantclient</code>.</p>
@@ -174,6 +180,7 @@
 RED.nodes.registerType("oracle-server", {
     category: "config",
     defaults: {
+        connectionname: { value: "", required: true },
         tnsname: { value: "" },
         connectiontype: { value: "Classic" },
         instantclientpath: { value: "" },
@@ -190,10 +197,7 @@ RED.nodes.registerType("oracle-server", {
         password: { type: "password" }
     },
     label: function () {
-        if (this.tnsname) {
-            return this.tnsname;
-        }
-        return (this.host || "localhost") + (this.port ? ":" + this.port : "") + (this.db ? "/" + this.db : "");
+        return this.connectionname;
     },
     oneditprepare: function () {
         var tabs = RED.tabs.create({
